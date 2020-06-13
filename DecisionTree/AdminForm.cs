@@ -5,6 +5,10 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using System.Linq;
+using Microsoft.Msagl;
+using Microsoft.Msagl.Drawing;
+using Microsoft.Msagl.GraphViewerGdi;
 
 namespace DecisionTree
 {
@@ -14,6 +18,7 @@ namespace DecisionTree
         List<TreeNode> Nodes = new List<TreeNode>();
         List<TreeParameter> TreeParameters = new List<TreeParameter>();
         List<string> ParameterValues = new List<string>();
+        GViewer GViewer;
         public AdminForm()
         {
             InitializeComponent();
@@ -37,16 +42,16 @@ namespace DecisionTree
         {
             var newNode = new TreeNode();
             newNode.Name = this.NodeName.Text;
-            if (this.ParentNodeName.SelectedIndex > -1)
+            if (this.ParentNodeName.SelectedIndex > -1 && !string.IsNullOrWhiteSpace(this.ParentNodeName.Text))
                 Nodes[this.ParentNodeName.SelectedIndex].ChildNodes.Add(newNode);
-            if (this.MainParameter.SelectedIndex > -1)
+            if (this.MainParameter.SelectedIndex > -1 && !string.IsNullOrWhiteSpace(this.MainParameter.Text))
                 newNode.ParentParameter = TreeParameters[this.MainParameter.SelectedIndex];
-            if (this.MainParameterValue.SelectedIndex > -1)
+            if (this.MainParameterValue.SelectedIndex > -1 && !string.IsNullOrWhiteSpace(this.MainParameterValue.Text))
                 newNode.ParameterValue = newNode.ParentParameter.Values[this.MainParameterValue.SelectedIndex];
-            if (this.ComparatorName.SelectedIndex > -1)
+            if (this.ComparatorName.SelectedIndex > -1 && !string.IsNullOrWhiteSpace(this.ComparatorName.Text))
                 if (newNode.ParentParameter.IsNumeric)
                     newNode.Comparator = (Comparator)this.ComparatorName.SelectedIndex;
-            if (this.CurrentParameterName.SelectedIndex > -1)
+            if (this.CurrentParameterName.SelectedIndex > -1 && !string.IsNullOrWhiteSpace(this.CurrentParameterName.Text))
                 newNode.CurrentParameter = TreeParameters[this.CurrentParameterName.SelectedIndex];
             Nodes.Add(newNode);
             this.NodeName.Text = "";
@@ -54,9 +59,28 @@ namespace DecisionTree
             this.MainParameter.SelectedIndex = -1;
             this.MainParameterValue.SelectedIndex = -1;
             this.ComparatorName.SelectedIndex = -1;
+            this.CurrentParameterName.SelectedIndex = -1;
             this.ParentNodeName.Items.Clear();
             foreach (var node in Nodes)
                 this.ParentNodeName.Items.Add(node.Name);
+            if (Nodes.Count > 1)
+            {
+                Graph DecTree = new Graph(Nodes[0].Name);
+                for (var i = 1; i < Nodes.Count; i++)
+                {
+                    var parent = Nodes.Where(x => x.ChildNodes.Contains(Nodes[i])).First();
+                    DecTree.AddEdge(parent.Name, UserForm.GetComparator(Nodes[i].Comparator) + Nodes[i].ParameterValue, Nodes[i].Name);
+                }
+                if (this.GViewer != null)
+                    this.Controls.Remove(this.GViewer);
+                GViewer viewer = new GViewer();
+                this.GViewer = viewer;
+                viewer.Width = 450;
+                viewer.Height = 400;
+                viewer.Location = new Point(350, 50);
+                viewer.Graph = DecTree;
+                this.Controls.Add(viewer);
+            }
         }
 
         private void AddParameter_Click(object sender, EventArgs e)

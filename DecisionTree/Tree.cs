@@ -13,8 +13,11 @@ namespace DecisionTree
 
         public List<TreeParameter> TreeParameters { get; set; } = new List<TreeParameter>();
 
+        public List<TreeNode> RightRoot { get; set; } = new List<TreeNode>();
+
         public string GetResult(Dictionary<string, string> paramValues)
         {
+            RightRoot.Clear();
             var root = Nodes[0];
             var flag = true;
             while (flag)
@@ -22,6 +25,7 @@ namespace DecisionTree
                 flag = false;
                 var value = paramValues[root.CurrentParameter.Name];
                 var child = root.ChildNodes.Where(x => IsValid(value, x)).FirstOrDefault();
+                RightRoot.Add(child);
                 if (child.ChildNodes.Count > 0)
                 {
                     flag = true;

@@ -45,11 +45,26 @@ namespace DecisionTree
                 for (var i = 1; i < tree.Nodes.Count; i++)
                 {
                     var parent = tree.Nodes.Where(x => x.ChildNodes.Contains(tree.Nodes[i])).First();
-                    DecTree.AddEdge(parent.Name, GetComparatorText(tree.Nodes[i].Comparator) + tree.Nodes[i].ParameterValue,tree.Nodes[i].Name);
+                    if (tree.RightRoot.Contains(tree.Nodes[i]))
+                    {
+
+                        /*var edge = new Edge(parent.Name, GetComparatorText(tree.Nodes[i].Comparator) + tree.Nodes[i].ParameterValue, tree.Nodes[i].Name);
+
+                        edge.Attr.Color = Microsoft.Msagl.Drawing.Color.Yellow;
+                        DecTree.AddPrecalculatedEdge(edge);*/
+                        DecTree.AddEdge(parent.Name, GetComparatorText(tree.Nodes[i].Comparator) + tree.Nodes[i].ParameterValue, tree.Nodes[i].Name)
+                            .TargetNode.Attr.FillColor = Microsoft.Msagl.Drawing.Color.Yellow;
+
+                    }
+                    else
+                    {
+                        DecTree.AddEdge(parent.Name, GetComparatorText(tree.Nodes[i].Comparator) + tree.Nodes[i].ParameterValue,tree.Nodes[i].Name);
+                    }
+
                 }
                 GViewer viewer = new GViewer();
-                viewer.Width = 400;
-                viewer.Height = 300;
+                viewer.Width = this.Width - 5;
+                viewer.Height = this.Height - 5;
                 var gr = new GraphForm();
                 gr.Controls.Add(viewer);
                 viewer.Graph = DecTree;
@@ -59,6 +74,18 @@ namespace DecisionTree
         }
 
         private string GetComparatorText(Comparator? comparator)
+        {
+            if (!comparator.HasValue)
+                return "";
+            if (comparator.Value == Comparator.EQUAL)
+                return "=";
+            if (comparator.Value == Comparator.LESS)
+                return "<";
+            if (comparator.Value == Comparator.MORE)
+                return ">";
+            return "";
+        }
+        public static string GetComparator(Comparator? comparator)
         {
             if (!comparator.HasValue)
                 return "";
